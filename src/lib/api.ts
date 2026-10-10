@@ -1,10 +1,12 @@
 import { parseNumber } from "./format";
 
 
+// প্রথমটা কাজ না করলে পরেরটায় চেষ্টা করবে
 const BASE_URLS = [
-  process.env.BAZAR_API_URL ?? "https://api.api-store.workers.dev/api/bazardor",
+  process.env.BAZAR_API_URL?.trim().replace(/\/$/, ""),
+  "https://api.api-store.workers.dev/api/bazardor",
   "https://api.abcz.workers.dev/api/bazardor",
-];
+].filter(Boolean) as string[];
 
 export interface Market {
   name: string;
@@ -182,10 +184,23 @@ const normalizeProduct = (raw: Raw): Product => {
 const get = async (path: string): Promise<unknown | null> => {
   for (const base of BASE_URLS) {
     try {
-      const res = await fetch(`${base}${path}`, { next: { revalidate: 300 } });
-      if (res.ok) return await res.json();
-    } catch {
-    
+      const res = await fetch(`${base}${path}`, {
+        cache: "no-store",
+        signal: AbortSignal.timeout(8000),
+        headers: {
+          Accept: "application/json",
+          "User-Agent": "Mozilla/5.0",
+        },
+      });
+
+      if (res.ok) {
+        return await res.json();
+      }
+
+      // Vercel Logs e dekha jabe
+      console.log("API error", res.status, `${base}${path}`);
+    } catch (error) {
+      console.log("API fetch failed", `${base}${path}`, error);
     }
   }
   return null;
