@@ -10,7 +10,11 @@ const UserInfo = () => {
   const { data: session, isPending } = authClient.useSession();
   const user = session?.user;
 
+  // dropdown বন্ধ করতে focus সরিয়ে দিচ্ছি
+  const closeMenu = () => (document.activeElement as HTMLElement | null)?.blur();
+
   const handleSignout = () => {
+    closeMenu();
     signOutWithToast(() => {
       router.push("/");
       router.refresh();
@@ -46,7 +50,7 @@ const UserInfo = () => {
           <div className="size-8 rounded-full bg-primary text-primary-content">
             {user.image ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img alt={user.name} src={user.image} />
+              <img alt="" src={user.image} referrerPolicy="no-referrer" />
             ) : (
               <span className="text-sm">{user.name?.charAt(0)}</span>
             )}
@@ -55,16 +59,21 @@ const UserInfo = () => {
         <span className="hidden max-w-24 truncate text-sm sm:inline">
           {user.name}
         </span>
+        <span className="text-[10px] text-neutral-500">▾</span>
       </div>
 
       <div
         tabIndex={0}
-        className="dropdown-content z-50 mt-2 w-60 rounded-box border border-base-300 bg-base-100 p-4 shadow-lg"
+        className="dropdown-content z-50 mt-2 w-56 rounded-box border border-base-300 bg-base-100 p-4 shadow-lg"
       >
         <p className="font-semibold">{user.name}</p>
         <p className="truncate text-xs text-neutral-500">{user.email}</p>
         <div className="my-3 border-t border-base-300" />
-        <Link href="/profile" className="block py-1 text-sm hover:text-primary">
+        <Link
+          href="/profile"
+          onClick={closeMenu}
+          className="block py-1 text-sm hover:text-primary"
+        >
           👤 আমার প্রোফাইল
         </Link>
         <button
