@@ -1,20 +1,46 @@
 "use client";
 
+import { useState } from "react";
 import { authClient } from "@/lib/auth-client";
 import { signOutWithToast } from "@/lib/sign-out";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 
 const ProfilePage = () => {
   const router = useRouter();
   const { data: session, isPending } = authClient.useSession();
   const user = session?.user;
+  const [loading, setLoading] = useState(false);
 
   const handleSignout = () => {
     signOutWithToast(() => {
       router.push("/");
       router.refresh();
     });
+  };
+
+  const handleUpdate = async (e: React.SubmitEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    const formData = new FormData(e.currentTarget);
+    const name = String(formData.get("name") ?? "").trim();
+
+    if (!name) {
+      toast.error("নাম লিখুন");
+      return;
+    }
+
+    setLoading(true);
+    const { error } = await authClient.updateUser({ name });
+    setLoading(false);
+
+    if (error) {
+      toast.error(error.message || "তথ্য আপডেট করা যায়নি");
+      return;
+    }
+
+    toast.success("তথ্য সফলভাবে আপডেট হয়েছে!");
+    router.refresh();
   };
 
   if (isPending) {
@@ -36,13 +62,13 @@ const ProfilePage = () => {
       </p>
 
       <div className="space-y-4">
-        {/* ইউজার কার্ড */}
+        
         <div className="flex flex-col gap-4 rounded-box border border-base-300 bg-base-100 p-5 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex min-w-0 items-center gap-4">
             <div className="avatar avatar-placeholder">
               <div className="size-16 rounded-2xl bg-primary text-2xl text-primary-content">
                 {user?.image ? (
-                  // eslint-disable-next-line @next/next/no-img-element
+                 
                   <img alt="" src={user.image} referrerPolicy="no-referrer" />
                 ) : (
                   <span>{user?.name?.charAt(0)}</span>
@@ -65,26 +91,32 @@ const ProfilePage = () => {
           </button>
         </div>
 
-        {/* তথ্য কার্ড */}
+        
         <div className="rounded-box border border-base-300 bg-base-100 p-5">
           <h3 className="mb-3 font-bold">তথ্য</h3>
 
-          <fieldset className="fieldset">
-            <label className="label">নাম</label>
-            <input
-              type="text"
-              disabled
-              value={user?.name ?? ""}
-              className="input w-full"
-            />
-            <p className="text-xs text-neutral-500">
-              নাম বদলাতে নিচের &quot;আপডেট&quot; বাটনে চাপুন।
-            </p>
+          <form key={user?.id} onSubmit={handleUpdate}>
+            <fieldset className="fieldset">
+              <label className="label">নাম</label>
+              <input
+                name="name"
+                type="text"
+                required
+                defaultValue={user?.name}
+                className="input w-full"
+                placeholder="আপনার নাম"
+              />
 
-            <Link href="/profile/update" className="btn btn-primary mt-4 w-full">
-              আপডেট
-            </Link>
-          </fieldset>
+              <button
+                type="submit"
+                disabled={loading}
+                className="btn btn-primary mt-4 w-full"
+              >
+                {loading && <span className="loading loading-spinner loading-sm" />}
+                আপডেট
+              </button>
+            </fieldset>
+          </form>
         </div>
       </div>
     </div>
