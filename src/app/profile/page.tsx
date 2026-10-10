@@ -73,10 +73,13 @@ const ProfilePage = () => {
             <label className="label">নাম</label>
             <input
               type="text"
-              readOnly
+              disabled
               value={user?.name ?? ""}
-              className="input w-full bg-base-200"
+              className="input w-full"
             />
+            <p className="text-xs text-neutral-500">
+              নাম বদলাতে নিচের &quot;আপডেট&quot; বাটনে চাপুন।
+            </p>
 
             <Link href="/profile/update" className="btn btn-primary mt-4 w-full">
               আপডেট
