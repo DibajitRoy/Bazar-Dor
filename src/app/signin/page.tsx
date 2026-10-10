@@ -12,12 +12,12 @@ const SignInForm = () => {
   const params = useSearchParams();
   const [loading, setLoading] = useState(false);
 
-  // login এর পর যেখানে ফিরবে (শুধু নিজের সাইটের path)
+ 
   const raw = params.get("redirect");
   const redirectTo =
     raw && raw.startsWith("/") && !raw.startsWith("//") ? raw : "/";
 
-  // protected পেজ থেকে এলে toast
+  
   useEffect(() => {
     if (params.get("from") === "protected") {
       toast.error("এই পেজ দেখতে আগে সাইন ইন করুন", { id: "protected" });

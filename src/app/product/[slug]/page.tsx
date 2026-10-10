@@ -36,7 +36,7 @@ const ProductDetails = async ({
 
   return (
     <div className="space-y-5">
-      {/* breadcrumb */}
+      
       <div className="breadcrumbs text-sm">
         <ul>
           <li>
@@ -51,7 +51,7 @@ const ProductDetails = async ({
         </ul>
       </div>
 
-      {/* product summary */}
+      
       <div className="flex flex-col gap-4 rounded-box border border-base-300 bg-base-100 p-5 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-4">
           <div className="flex size-16 items-center justify-center rounded-2xl bg-base-200 text-4xl">
@@ -113,7 +113,7 @@ const ProductDetails = async ({
           </div>
         </div>
 
-        {/* market wise price */}
+        
         <h2 className="mb-3 mt-6 text-lg font-bold">বাজারভিত্তিক আজকের দাম</h2>
 
         {product.markets.length === 0 ? (

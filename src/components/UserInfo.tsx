@@ -10,7 +10,7 @@ const UserInfo = () => {
   const { data: session, isPending } = authClient.useSession();
   const user = session?.user;
 
-  // dropdown বন্ধ করতে focus সরিয়ে দিচ্ছি
+
   const closeMenu = () => (document.activeElement as HTMLElement | null)?.blur();
 
   const handleSignout = () => {
@@ -45,11 +45,11 @@ const UserInfo = () => {
         role="button"
         className="btn btn-ghost btn-sm sm:btn-md gap-2"
       >
-        {/* ছবি না থাকলে নামের প্রথম অক্ষর দেখাবে */}
+       
         <div className="avatar avatar-placeholder">
           <div className="size-8 rounded-full bg-primary text-primary-content">
             {user.image ? (
-              // eslint-disable-next-line @next/next/no-img-element
+          
               <img alt="" src={user.image} referrerPolicy="no-referrer" />
             ) : (
               <span className="text-sm">{user.name?.charAt(0)}</span>

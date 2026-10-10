@@ -7,13 +7,13 @@ import { formatNumber, getBanglaDate } from "@/lib/format";
 const Home = async () => {
   const products = await getProducts();
 
-  // দাম বেড়েছে (সবচেয়ে বেশি ৬টি)
+  
   const risers = products
     .filter((p) => p.change > 0)
     .sort((a, b) => b.change - a.change)
     .slice(0, 6);
 
-  // দাম কমেছে (সবচেয়ে বেশি ৬টি)
+  
   const fallers = products
     .filter((p) => p.change < 0)
     .sort((a, b) => a.change - b.change)
@@ -21,7 +21,7 @@ const Home = async () => {
 
   return (
     <div className="space-y-10">
-      {/* hero section */}
+      
       <div className="flex flex-col-reverse items-center gap-6 rounded-box border border-base-300 bg-base-100 p-6 md:flex-row md:justify-between">
         <div className="max-w-xl text-center md:text-left">
           <span className="badge badge-success badge-soft">{getBanglaDate()}</span>
@@ -47,7 +47,7 @@ const Home = async () => {
         />
       </div>
 
-      {/* দাম বেড়েছে */}
+  
       <div>
         <h2 className="mb-4 flex items-center gap-2 text-xl font-bold">
           <TrendIcon dir="up" className="size-3.5 text-red-600" /> আজ দাম বেড়েছে
@@ -59,7 +59,7 @@ const Home = async () => {
         </div>
       </div>
 
-      {/* দাম কমেছে */}
+      
       <div>
         <h2 className="mb-4 flex items-center gap-2 text-xl font-bold">
           <TrendIcon dir="down" className="size-3.5 text-green-700" /> আজ দাম কমেছে

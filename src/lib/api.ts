@@ -1,6 +1,6 @@
 import { parseNumber } from "./format";
 
-// প্রথমটা কাজ না করলে দ্বিতীয়টায় চেষ্টা করবে
+
 const BASE_URLS = [
   process.env.BAZAR_API_URL ?? "https://api.api-store.workers.dev/api/bazardor",
   "https://api.abcz.workers.dev/api/bazardor",
@@ -26,11 +26,11 @@ export interface Product {
   slug: string;
   name: string;
   emoji: string;
-  unit: string; // "কেজি" (প্রতি ছাড়া)
+  unit: string; 
   categorySlug: string;
   categoryName: string;
   price: number;
-  change: number; // % — বাড়লে +, কমলে -
+  change: number; 
   previousPrice: number | null;
   description: string;
   minPrice: number;
@@ -63,7 +63,6 @@ const unwrap = (json: unknown, keys: string[]): unknown => {
   return json;
 };
 
-/* ---------- normalizers ---------- */
 
 const normalizeCategory = (raw: Raw): Category => ({
   slug: str(pick(raw, ["slug", "id", "key"])),
@@ -87,7 +86,6 @@ const normalizeMarket = (raw: Raw): Market => {
   };
 };
 
-// API তে unit ইংরেজিতে আছে (kg, litre...), তাই বাংলা করে নেওয়া হচ্ছে
 const UNIT_BN: Record<string, string> = {
   kg: "কেজি",
   litre: "লিটার",
@@ -105,7 +103,6 @@ const toBnUnit = (value: unknown): string => {
 };
 
 const normalizeProduct = (raw: Raw): Product => {
-  // দাম: API তে "today"
   const price =
     parseNumber(
       pick(raw, ["today", "price", "todayPrice", "currentPrice", "avgPrice"]),
@@ -115,7 +112,6 @@ const normalizeProduct = (raw: Raw): Product => {
     pick(raw, ["yesterday", "previousPrice", "yesterdayPrice", "prevPrice"]),
   );
 
-  // পরিবর্তন: API তে change = { dir: "up" | "down" | "flat", pct: 2.1 }
   let change: number | null = null;
   let dir = "";
   const changeRaw = raw["change"];
@@ -135,7 +131,6 @@ const normalizeProduct = (raw: Raw): Product => {
   else if (/up|rise|increase/.test(dir)) change = Math.abs(change);
   else if (/flat|same|none/.test(dir)) change = 0;
 
-  // category: string অথবা object দুটোই handle
   const cat = pick(raw, ["category", "categorySlug"]);
   let categorySlug = "";
   let categoryName = str(pick(raw, ["categoryNameBn", "categoryName", "categoryBn"]));
@@ -146,7 +141,6 @@ const normalizeProduct = (raw: Raw): Product => {
     categorySlug = str(cat);
   }
 
-  // বাজারভিত্তিক দাম: গড় না থাকলে (min + max) / 2, তারপর গড় অনুযায়ী কম থেকে বেশি
   const marketsRaw = pick(raw, ["markets", "bazars", "marketPrices", "prices"]);
   const markets = Array.isArray(marketsRaw)
     ? marketsRaw
@@ -183,7 +177,7 @@ const normalizeProduct = (raw: Raw): Product => {
   };
 };
 
-/* ---------- fetchers ---------- */
+
 
 const get = async (path: string): Promise<unknown | null> => {
   for (const base of BASE_URLS) {
@@ -191,7 +185,7 @@ const get = async (path: string): Promise<unknown | null> => {
       const res = await fetch(`${base}${path}`, { next: { revalidate: 300 } });
       if (res.ok) return await res.json();
     } catch {
-      // এই URL কাজ না করলে পরের URL এ চেষ্টা হবে
+    
     }
   }
   return null;
@@ -202,7 +196,7 @@ export const getCategories = async (): Promise<Category[]> => {
   return Array.isArray(json) ? json.filter(isObj).map(normalizeCategory) : [];
 };
 
-// ভুল slug হলে null → page এ notFound() চলবে
+
 export const getCategory = async (slug: string): Promise<Category | null> => {
   const categories = await getCategories();
   return categories.find((c) => c.slug === slug) ?? null;
@@ -216,7 +210,6 @@ export const getProducts = async (categorySlug?: string): Promise<Product[]> => 
   return Array.isArray(json) ? json.filter(isObj).map(normalizeProduct) : [];
 };
 
-// /product/[slug] → slug (অথবা id) মিলিয়ে list থেকেই খুঁজে নেওয়া হয়
 export const getProduct = async (slug: string): Promise<Product | null> => {
   const products = await getProducts();
   return products.find((p) => p.slug === slug || p.id === slug) ?? null;
