@@ -6,6 +6,8 @@ import Ticker from "@/components/Ticker";
 import Footer from "@/components/Footer";
 import { Toaster } from "react-hot-toast";
 
+export const dynamic = "force-dynamic";
+
 const notoSansBengali = Noto_Sans_Bengali({
   subsets: ["latin", "bengali"],
 });
