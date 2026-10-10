@@ -1,12 +1,34 @@
-import { parseNumber } from "./format";
+const BASE_URL = "https://openapi.programming-hero.com/api/bazardor";
 
 
-const BASE_URL = (
-  process.env.BAZAR_API_URL?.trim() ||
-  "https://openapi.programming-hero.com/api/bazardor"
-).replace(/\/$/, "");
+interface ApiMarket {
+  market: string;
+  division: string;
+  min: number;
+  max: number;
+}
 
-const BASE_URLS = [BASE_URL];
+interface ApiProduct {
+  id: number;
+  slug: string;
+  nameBn: string;
+  category: string;
+  categoryNameBn: string;
+  unit: string;
+  image: string;
+  today: number;
+  yesterday: number;
+  change: { dir: string; pct: number };
+  markets: ApiMarket[];
+}
+
+interface ApiCategory {
+  slug: string;
+  nameBn: string;
+  icon: string;
+}
+
+
 
 export interface Market {
   name: string;
@@ -20,7 +42,6 @@ export interface Category {
   slug: string;
   name: string;
   emoji: string;
-  description: string;
 }
 
 export interface Product {
@@ -28,12 +49,12 @@ export interface Product {
   slug: string;
   name: string;
   emoji: string;
-  unit: string;
+  unit: string; 
   categorySlug: string;
   categoryName: string;
-  price: number;
-  change: number;
-  previousPrice: number | null;
+  price: number; 
+  change: number; 
+  previousPrice: number; 
   description: string;
   minPrice: number;
   maxPrice: number;
@@ -41,194 +62,125 @@ export interface Product {
   markets: Market[];
 }
 
-type Raw = Record<string, unknown>;
-
-const isObj = (v: unknown): v is Raw =>
-  typeof v === "object" && v !== null && !Array.isArray(v);
-
-const pick = (raw: Raw, keys: string[]): unknown => {
-  for (const k of keys) {
-    if (raw[k] !== undefined && raw[k] !== null && raw[k] !== "") return raw[k];
-  }
-  return undefined;
-};
-
-const str = (v: unknown, fallback = "") =>
-  v === undefined || v === null ? fallback : String(v);
-
-const unwrap = (json: unknown, keys: string[]): unknown => {
-  if (isObj(json)) {
-    for (const k of keys) {
-      if (json[k] !== undefined) return json[k];
-    }
-    // পরিচিত key না মিললে wrapper এর ভেতরের প্রথম array টা নেওয়া হবে
-    const firstArray = Object.values(json).find((v) => Array.isArray(v));
-    if (firstArray) return firstArray;
-  }
-  return json;
-};
-
-const normalizeCategory = (raw: Raw): Category => ({
-  slug: str(pick(raw, ["slug", "id", "key"])),
-  name: str(pick(raw, ["nameBn", "name", "title", "label"])),
-  emoji: str(pick(raw, ["emoji", "icon"]), "🛒"),
-  description: str(pick(raw, ["description", "subtitle"])),
-});
-
-const normalizeMarket = (raw: Raw): Market => {
-  const min = parseNumber(pick(raw, ["min", "minPrice", "lowest"])) ?? 0;
-  const max = parseNumber(pick(raw, ["max", "maxPrice", "highest"])) ?? min;
-  const avg =
-    parseNumber(pick(raw, ["avg", "average", "avgPrice"])) ?? (min + max) / 2;
-
-  return {
-    name: str(pick(raw, ["market", "name", "bazar", "marketName"])),
-    division: str(pick(raw, ["division", "region", "city", "location"])),
-    min,
-    max,
-    avg,
-  };
-};
 
 const UNIT_BN: Record<string, string> = {
   kg: "কেজি",
   litre: "লিটার",
-  liter: "লিটার",
   dozen: "ডজন",
   piece: "পিস",
-  pcs: "পিস",
-  pc: "পিস",
-  hali: "হালি",
 };
 
-const toBnUnit = (value: unknown): string => {
-  const u = str(value, "kg").trim().replace(/^প্রতি\s*/, "");
-  return UNIT_BN[u.toLowerCase()] ?? u;
-};
 
-const normalizeProduct = (raw: Raw): Product => {
-  const price =
-    parseNumber(
-      pick(raw, ["today", "price", "todayPrice", "currentPrice", "avgPrice"]),
-    ) ?? 0;
-
-  const prev = parseNumber(
-    pick(raw, ["yesterday", "previousPrice", "yesterdayPrice", "prevPrice"]),
-  );
-
-  let change: number | null = null;
-  let dir = "";
-  const changeRaw = raw["change"];
-  if (isObj(changeRaw)) {
-    change = parseNumber(pick(changeRaw, ["pct", "percent", "value"]));
-    dir = str(pick(changeRaw, ["dir", "direction", "trend"])).toLowerCase();
-  } else {
-    change = parseNumber(
-      pick(raw, ["changePercent", "change_percent", "percentChange", "changePct", "change"]),
-    );
-    dir = str(pick(raw, ["trend", "direction", "status"])).toLowerCase();
-  }
-  if (change === null) {
-    change = prev && prev > 0 ? ((price - prev) / prev) * 100 : 0;
-  }
-  if (/down|fall|decrease/.test(dir)) change = -Math.abs(change);
-  else if (/up|rise|increase/.test(dir)) change = Math.abs(change);
-  else if (/flat|same|none/.test(dir)) change = 0;
-
-  const cat = pick(raw, ["category", "categorySlug"]);
-  let categorySlug = "";
-  let categoryName = str(pick(raw, ["categoryNameBn", "categoryName", "categoryBn"]));
-  if (isObj(cat)) {
-    categorySlug = str(pick(cat, ["slug", "id"]));
-    categoryName = categoryName || str(pick(cat, ["nameBn", "name", "title"]));
-  } else {
-    categorySlug = str(cat);
+function toArray<T>(json: unknown): T[] {
+  if (Array.isArray(json)) {
+    return json as T[];
   }
 
-  const marketsRaw = pick(raw, ["markets", "bazars", "marketPrices", "prices"]);
-  const markets = Array.isArray(marketsRaw)
-    ? marketsRaw
-        .filter(isObj)
-        .map(normalizeMarket)
-        .sort((a, b) => a.avg - b.avg)
-    : [];
-
-  const minPrice =
-    parseNumber(pick(raw, ["minPrice", "lowestPrice"])) ??
-    (markets.length ? Math.min(...markets.map((m) => m.min)) : price);
-  const maxPrice =
-    parseNumber(pick(raw, ["maxPrice", "highestPrice"])) ??
-    (markets.length ? Math.max(...markets.map((m) => m.max)) : price);
-  const avgPrice =
-    parseNumber(pick(raw, ["avgPrice", "averagePrice", "average"])) ?? price;
-
-  return {
-    id: str(pick(raw, ["id", "_id", "slug"])),
-    slug: str(pick(raw, ["slug", "id", "_id"])),
-    name: str(pick(raw, ["nameBn", "name", "title"])),
-    emoji: str(pick(raw, ["image", "emoji", "icon", "categoryIcon"]), "🛒"),
-    unit: toBnUnit(pick(raw, ["unitBn", "unit", "unitName"])),
-    categorySlug,
-    categoryName,
-    price,
-    change,
-    previousPrice: prev,
-    description: str(pick(raw, ["description", "summary", "subtitle"])),
-    minPrice,
-    maxPrice,
-    avgPrice,
-    markets,
-  };
-};
-
-const savedData: Record<string, unknown> = {};
-
-const get = async (path: string): Promise<unknown | null> => {
-  for (const base of BASE_URLS) {
-    try {
-      const res = await fetch(`${base}${path}`, {
-        next: { revalidate: 600 }, // ১০ মিনিট পর্যন্ত একই data ব্যবহার হবে
-        signal: AbortSignal.timeout(8000),
-        headers: {
-          Accept: "application/json",
-        },
-      });
-
-      if (res.ok) {
-        const json = await res.json();
-        savedData[path] = json;
-        return json;
-      }
-
-      console.log("API error", res.status, `${base}${path}`);
-    } catch (error) {
-      console.log("API fetch failed", `${base}${path}`, error);
+  if (json && typeof json === "object") {
+    const firstArray = Object.values(json).find((v) => Array.isArray(v));
+    if (firstArray) {
+      return firstArray as T[];
     }
   }
 
+  return [];
+}
+
+async function fetchData(path: string): Promise<unknown> {
+  try {
+    const res = await fetch(`${BASE_URL}${path}`, {
+      next: { revalidate: 600 }, 
+    });
+
+    if (!res.ok) {
+      console.log("API error:", res.status, path);
+      return null;
+    }
+
+    return await res.json();
+  } catch (error) {
+    console.log("API fetch failed:", path, error);
+    return null;
+  }
+}
+
+
+
+function makeCategory(item: ApiCategory): Category {
+  return {
+    slug: item.slug,
+    name: item.nameBn,
+    emoji: item.icon,
+  };
+}
+
+function makeProduct(item: ApiProduct): Product {
+
+  let change = Math.abs(item.change?.pct ?? 0);
+  if (item.change?.dir === "down") change = -change;
+  if (item.change?.dir === "flat") change = 0;
+
+
+  const markets: Market[] = (item.markets ?? [])
+    .map((m) => ({
+      name: m.market,
+      division: m.division,
+      min: m.min,
+      max: m.max,
+      avg: (m.min + m.max) / 2,
+    }))
+    .sort((a, b) => a.avg - b.avg);
+
   
-  return savedData[path] ?? null;
-};
+  const minPrice = markets.length
+    ? Math.min(...markets.map((m) => m.min))
+    : item.today;
+  const maxPrice = markets.length
+    ? Math.max(...markets.map((m) => m.max))
+    : item.today;
 
-export const getCategories = async (): Promise<Category[]> => {
-  const json = unwrap(await get("/categories"), ["data", "categories", "items"]);
-  return Array.isArray(json) ? json.filter(isObj).map(normalizeCategory) : [];
-};
+  return {
+    id: String(item.id),
+    slug: item.slug,
+    name: item.nameBn,
+    emoji: item.image,
+    unit: UNIT_BN[item.unit] ?? item.unit,
+    categorySlug: item.category,
+    categoryName: item.categoryNameBn,
+    price: item.today,
+    change,
+    previousPrice: item.yesterday,
+    description: "",
+    minPrice,
+    maxPrice,
+    avgPrice: item.today,
+    markets,
+  };
+}
 
-export const getCategory = async (slug: string): Promise<Category | null> => {
+
+
+
+export async function getCategories(): Promise<Category[]> {
+  const json = await fetchData("/categories");
+  return toArray<ApiCategory>(json).map(makeCategory);
+}
+
+
+export async function getCategory(slug: string): Promise<Category | null> {
   const categories = await getCategories();
   return categories.find((c) => c.slug === slug) ?? null;
-};
+}
 
-export const getProducts = async (categorySlug?: string): Promise<Product[]> => {
-  const path = categorySlug
-    ? `/products?category=${encodeURIComponent(categorySlug)}`
-    : "/products";
-  const json = unwrap(await get(path), ["data", "products", "items"]);
-  return Array.isArray(json) ? json.filter(isObj).map(normalizeProduct) : [];
-};
 
-export const getProduct = async (slug: string): Promise<Product | null> => {
+export async function getProducts(categorySlug?: string): Promise<Product[]> {
+  const path = categorySlug ? `/products?category=${categorySlug}` : "/products";
+  const json = await fetchData(path);
+  return toArray<ApiProduct>(json).map(makeProduct);
+}
+
+
+export async function getProduct(slug: string): Promise<Product | null> {
   const products = await getProducts();
   return products.find((p) => p.slug === slug || p.id === slug) ?? null;
-};
+}
