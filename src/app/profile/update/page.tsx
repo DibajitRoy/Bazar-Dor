@@ -63,13 +63,13 @@ const UpdateProfilePage = () => {
       </p>
 
       <div className="space-y-4">
-        {/* ইউজার কার্ড */}
+        
         <div className="flex flex-col gap-4 rounded-box border border-base-300 bg-base-100 p-5 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex min-w-0 items-center gap-4">
             <div className="avatar avatar-placeholder">
               <div className="size-16 rounded-2xl bg-primary text-2xl text-primary-content">
                 {user?.image ? (
-                  // eslint-disable-next-line @next/next/no-img-element
+                 
                   <img alt="" src={user.image} referrerPolicy="no-referrer" />
                 ) : (
                   <span>{user?.name?.charAt(0)}</span>
@@ -92,11 +92,11 @@ const UpdateProfilePage = () => {
           </button>
         </div>
 
-        {/* তথ্য কার্ড */}
+        
         <div className="rounded-box border border-base-300 bg-base-100 p-5">
           <h3 className="mb-3 font-bold">তথ্য</h3>
 
-          {/* key দেওয়া হয়েছে যাতে session load হলে defaultValue বসে */}
+         
           <form key={user?.id} onSubmit={handleUpdateProfile}>
             <fieldset className="fieldset">
               <label className="label">নাম</label>
