@@ -1,12 +1,12 @@
 import { parseNumber } from "./format";
 
 
-// প্রথমটা কাজ না করলে পরেরটায় চেষ্টা করবে
-const BASE_URLS = [
-  process.env.BAZAR_API_URL?.trim().replace(/\/$/, ""),
-  "https://api.api-store.workers.dev/api/bazardor",
-  "https://api.abcz.workers.dev/api/bazardor",
-].filter(Boolean) as string[];
+const BASE_URL = (
+  process.env.BAZAR_API_URL?.trim() ||
+  "https://openapi.programming-hero.com/api/bazardor"
+).replace(/\/$/, "");
+
+const BASE_URLS = [BASE_URL];
 
 export interface Market {
   name: string;
@@ -28,11 +28,11 @@ export interface Product {
   slug: string;
   name: string;
   emoji: string;
-  unit: string; 
+  unit: string;
   categorySlug: string;
   categoryName: string;
   price: number;
-  change: number; 
+  change: number;
   previousPrice: number | null;
   description: string;
   minPrice: number;
@@ -61,10 +61,12 @@ const unwrap = (json: unknown, keys: string[]): unknown => {
     for (const k of keys) {
       if (json[k] !== undefined) return json[k];
     }
+    // পরিচিত key না মিললে wrapper এর ভেতরের প্রথম array টা নেওয়া হবে
+    const firstArray = Object.values(json).find((v) => Array.isArray(v));
+    if (firstArray) return firstArray;
   }
   return json;
 };
-
 
 const normalizeCategory = (raw: Raw): Category => ({
   slug: str(pick(raw, ["slug", "id", "key"])),
@@ -179,9 +181,6 @@ const normalizeProduct = (raw: Raw): Product => {
   };
 };
 
-
-
-// আগে যে data সফলভাবে এসেছে সেটা মনে রাখে (API fail করলে কাজে লাগবে)
 const savedData: Record<string, unknown> = {};
 
 const get = async (path: string): Promise<unknown | null> => {
@@ -207,7 +206,7 @@ const get = async (path: string): Promise<unknown | null> => {
     }
   }
 
-  // API না পেলে আগের data (থাকলে) দেখাবে
+  
   return savedData[path] ?? null;
 };
 
@@ -215,7 +214,6 @@ export const getCategories = async (): Promise<Category[]> => {
   const json = unwrap(await get("/categories"), ["data", "categories", "items"]);
   return Array.isArray(json) ? json.filter(isObj).map(normalizeCategory) : [];
 };
-
 
 export const getCategory = async (slug: string): Promise<Category | null> => {
   const categories = await getCategories();
