@@ -1,6 +1,6 @@
-# 🛒 বাজার দর (BazarDor)
+# 🛒 BazarDor (বাজার দর)
 
-প্রয়োজনীয় নিত্যপণ্যের (চাল, ডাল, তেল, সবজি, মাছ, মাংস, ডিম-দুধ, মসলা) আজকের বাজারদর, বাজারভিত্তিক তুলনা এবং দামের উঠানামা এক নজরে দেখার একটি Next.js ওয়েব অ্যাপ।
+BazarDor is a Next.js web app that lets you see today's prices of essential daily items (rice, lentils, oil, vegetables, fish, meat, eggs & dairy, spices) at a glance, along with market-wise comparison and daily price changes.
 
 ## 🛠️ Technologies Used
 
@@ -14,8 +14,8 @@
 
 ## ✨ Key Features
 
-1. 📈 অনন্ত স্ক্রলিং প্রাইস টিকার, যেখানে দাম ও ▲/▼ পরিবর্তন দেখা যায়
-2. 🔺🔻 আজ কোন ৬টি পণ্যের দাম সবচেয়ে বেশি বেড়েছে ও কমেছে তার তালিকা
-3. 🗂️ ক্যাটাগরি পেজে দাম অনুযায়ী সাজানোর সুবিধা (বাংলা সংখ্যা-নিরাপদ numeric sort)
-4. 🏪 বাজারভিত্তিক সর্বনিম্ন, সর্বাধিক ও গড় দাম (login-protected details page)
-5. 🔐 BetterAuth দিয়ে লগইন, রেজিস্ট্রেশন, Google/GitHub লগইন ও প্রোফাইল আপডেট
+1. 📈 Infinite scrolling price ticker showing prices and ▲/▼ percentage changes
+2. 🔺🔻 Top 6 items whose prices rose and fell the most today
+3. 🗂️ Category pages with price sorting (numeric sort that handles Bengali numerals correctly)
+4. 🏪 Market-wise minimum, maximum and average prices on a login-protected details page
+5. 🔐 Email/password, Google and GitHub authentication with BetterAuth, plus profile update
