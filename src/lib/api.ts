@@ -181,29 +181,34 @@ const normalizeProduct = (raw: Raw): Product => {
 
 
 
+// আগে যে data সফলভাবে এসেছে সেটা মনে রাখে (API fail করলে কাজে লাগবে)
+const savedData: Record<string, unknown> = {};
+
 const get = async (path: string): Promise<unknown | null> => {
   for (const base of BASE_URLS) {
     try {
       const res = await fetch(`${base}${path}`, {
-        cache: "no-store",
+        next: { revalidate: 600 }, // ১০ মিনিট পর্যন্ত একই data ব্যবহার হবে
         signal: AbortSignal.timeout(8000),
         headers: {
           Accept: "application/json",
-          "User-Agent": "Mozilla/5.0",
         },
       });
 
       if (res.ok) {
-        return await res.json();
+        const json = await res.json();
+        savedData[path] = json;
+        return json;
       }
 
-      // Vercel Logs e dekha jabe
       console.log("API error", res.status, `${base}${path}`);
     } catch (error) {
       console.log("API fetch failed", `${base}${path}`, error);
     }
   }
-  return null;
+
+  // API না পেলে আগের data (থাকলে) দেখাবে
+  return savedData[path] ?? null;
 };
 
 export const getCategories = async (): Promise<Category[]> => {
